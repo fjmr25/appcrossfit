@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recreos Activos - 21 Estaciones CrossFit</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .user-info {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logout-btn {
+            background: #f5576c;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #e04458;
+            transform: scale(1.05);
+        }
+
+        .user-stats {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            color: white;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-box .number {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-box .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .badges-container {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .badges-container h3 {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
+        }
+
+        .badge {
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .badge.unlocked {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            animation: glow 2s infinite;
+        }
+
+        .badge.locked {
+            opacity: 0.5;
+            filter: grayscale(100%);
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+            50% { box-shadow: 0 0 20px rgba(255,255,255,0.8); }
+        }
+
+        .badge-icon {
+            font-size: 2.5em;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .badge-name {
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .stations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .station-btn {
+            background: white;
+            border: none;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .station-btn:hover:not(.locked) {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.2);
+        }
+
+        .station-btn.completed {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .station-btn.locked {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .station-btn.current {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .station-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .station-name {
+            font-size: 0.9em;
+        }
+
+        .checkmark {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 1.5em;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #f5576c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            transform: rotate(90deg);
+            background: #e04458;
+        }
+
+        .video-container {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2em;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .timer-container {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .timer {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .timer.warning {
+            color: #ff9800;
+            animation: blink 1s infinite;
+        }
+
+        .timer.danger {
+            color: #f5576c;
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.5; }
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .timer-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .start-btn {
+            background: #11998e;
+            color: white;
+        }
+
+        .stop-btn {
+            background: #f5576c;
+            color: white;
+        }
+
+        .reset-btn {
+            background: #ff9800;
+            color: white;
+        }
+
+        .timer-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .complete-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .complete-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .complete-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .leaderboard {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .leaderboard h2 {
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .leaderboard-item:hover {
+            transform: translateX(5px);
+            background: #e9ecef;
+        }
+
+        .rank {
+            font-size: 1.5em;
+            font-weight: bold;
+            width: 40px;
+        }
+
+        .rank.gold { color: #ffd700; }
+        .rank.silver { color: #c0c0c0; }
+        .rank.bronze { color: #cd7f32; }
+
+        .player-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .player-score {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .login-container h2 {
+            color: #667eea;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .login-btn, .register-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .register-btn {
+            background: #f8f9fa;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .login-btn:hover, .register-btn:hover {
+            transform: scale(1.02);
+        }
+
+        .login-btn:disabled, .register-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .toggle-form {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .toggle-form a {
+            color: #667eea;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #ffe0e0;
+            color: #d32f2f;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .success-message {
+            background: #e0f7e0;
+            color: #2e7d32;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .badge-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+            z-index: 2000;
+            text-align: center;
+            transition: all 0.5s ease;
+        }
+
+        .badge-notification.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .badge-notification .badge-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+        }
+
+        .badge-notification h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.5em;
+            padding: 50px;
+        }
+
+        .config-warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px;
+            text-align: center;
+        }
+
+        .config-warning h3 {
+            margin-bottom: 10px;
+        }
+
+        .config-warning code {
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="container">
+        <div class="loading">⏳ Cargando aplicación...</div>
+    </div>
+
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="container hidden">
+        <div class="login-container">
+            <h2 id="auth-title">🏋️ Iniciar Sesión</h2>
+            <div id="auth-message"></div>
+            <form id="auth-form">
+                <div class="form-group">
+                    <label for="email">Correo Electrónico</label>
+                    <input type="email" id="email" required placeholder="tu@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" required placeholder="Mínimo 6 caracteres">
+                </div>
+                <div class="form-group" id="username-group" style="display: none;">
+                    <label for="username">Nombre de Usuario</label>
+                    <input type="text" id="username" placeholder="Tu nombre para la clasificación">
+                </div>
+                <button type="submit" class="login-btn" id="auth-submit">Iniciar Sesión</button>
+            </form>
+            <div class="toggle-form">
+                <span id="toggle-text">¿No tienes cuenta? <a id="toggle-link">Regístrate aquí</a></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Screen -->
+    <div id="app-screen" class="container hidden">
+        <div class="header">
+            <h1>🏋️ Recreos Activos CrossFit</h1>
+            <p>¡Completa las 21 estaciones y conviértete en campeón!</p>
+        </div>
+
+        <div class="user-info">
+            <div>
+                <strong>👤 <span id="current-username"></span></strong>
+            </div>
+            <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+        </div>
+
+        <div class="user-stats">
+            <div class="stat-box">
+                <span class="number" id="completed-count">0</span>
+                <span class="label">Estaciones completadas</span>
+            </div>
+            <div class="stat-box">
+                <span class="number" id="total-points">0</span>
+                <span class="label">Puntos totales</span>
+            </div>
+            <div class="stat-box">
+                <span class="number" id="progress-percent">0%</span>
+                <span class="label">Progreso</span>
+            </div>
+        </div>
+
+        <div class="badges-container">
+            <h3>🏆 Logros Desbloqueados</h3>
+            <div class="badges-grid" id="badges-grid"></div>
+        </div>
+
+        <div class="stations-grid" id="stations-grid"></div>
+
+        <div class="leaderboard">
+            <h2>🏆 Clasificación Global</h2>
+            <div id="leaderboard-list"></div>
+        </div>
+    </div>
+
+    <!-- Station Modal -->
+    <div class="modal" id="station-modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">×</button>
+            <h2 id="modal-title">Estación 1</h2>
+            <div class="video-container" id="video-container">
+                📹 Vídeo de demostración del ejercicio
+                <br><small>(Aquí irían los vídeos de cada estación)</small>
+            </div>
+            <p id="exercise-description"></p>
+            
+            <div class="timer-container">
+                <div>⏱️ Tiempo límite: <strong>3 minutos</strong></div>
+                <div class="timer" id="timer">03:00</div>
+                <div class="timer-controls">
+                    <button class="timer-btn start-btn" onclick="startTimer()">▶ Iniciar</button>
+                    <button class="timer-btn stop-btn" onclick="stopTimer()">⏸ Pausar</button>
+                    <button class="timer-btn reset-btn" onclick="resetTimer()">↻ Reiniciar</button>
+                </div>
+            </div>
+
+            <button class="complete-btn" id="complete-btn" onclick="completeStation()">✓ Marcar como completada</button>
+        </div>
+    </div>
+
+    <!-- Badge Notification -->
+    <div class="badge-notification" id="badge-notification">
+        <div class="badge-icon" id="notification-icon">🏆</div>
+        <h3 id="notification-title">¡Logro Desbloqueado!</h3>
+        <p id="notification-description"></p>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // 🔥 CONFIGURACIÓN DE FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyD1dbdp3AAnUKJyY3TVLQtj5os3m6vcMBE",
+            authDomain: "recreos-activos-crossfit.firebaseapp.com",
+            projectId: "recreos-activos-crossfit",
+            storageBucket: "recreos-activos-crossfit.firebasestorage.app",
+            messagingSenderId: "211003623311",
+            appId: "1:211003623311:web:89907885e64bc96833adfa"
+        };
+
+        // Verificar si Firebase está configurado
+        const isFirebaseConfigured = true;
+
+        if (!isFirebaseConfigured) {
+            document.getElementById('loading-screen').innerHTML = `
+                <div class="config-warning">
+                    <h3>⚠️ Configuración Necesaria</h3>
+                    <p>Para usar esta aplicación, necesitas configurar Firebase:</p>
+                    <ol style="text-align: left; margin: 20px auto; max-width: 500px;">
+                        <li>Sigue las instrucciones del PASO 1</li>
+                        <li>Copia tus credenciales de Firebase</li>
+                        <li>Reemplaza las líneas que dicen <code>TU_API_KEY_AQUI</code>, etc.</li>
+                        <li>Guarda el archivo y recarga la página</li>
+                    </ol>
+                </div>
+            `;
+            throw new Error('Firebase no configurado');
+        }
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Constantes
+        const exercises = [
+            "Burpees", "Flexiones", "Sentadillas", "Mountain Climbers", "Jumping Jacks",
+            "Lunges", "Plancha", "High Knees", "Squat Jumps", "Push-up to T",
+            "Box Jumps", "Russian Twists", "Wall Sit", "Skipping", "Bicycle Crunches",
+            "Bear Crawl", "Tuck Jumps", "Side Plank", "Sprint", "Inchworms", "Cool Down"
+        ];
+
+        const badges = [
+            { id: 'first_step', name: 'Primer Paso', icon: '🎯', requirement: 1, description: 'Completa tu primera estación' },
+            { id: 'getting_strong', name: 'Tomando Fuerza', icon: '💪', requirement: 5, description: 'Completa 5 estaciones' },
+            { id: 'half_way', name: 'A Medio Camino', icon: '⭐', requirement: 10, description: 'Completa 10 estaciones' },
+            { id: 'almost_there', name: 'Casi Campeón', icon: '🔥', requirement: 15, description: 'Completa 15 estaciones' },
+            { id: 'champion', name: 'Campeón', icon: '👑', requirement: 21, description: 'Completa las 21 estaciones' },
+            { id: 'speed_demon', name: 'Rayo', icon: '⚡', requirement: 'speed', description: 'Completa una estación en menos de 1 minuto' },
+        ];
+
+        // Variables globales
+        let currentUser = null;
+        let userData = null;
+        let isLoginMode = true;
+        let currentStationIndex = 0;
+        let timerInterval = null;
+        let timeRemaining = 180;
+        const TIME_LIMIT = 180;
+        let unsubscribeLeaderboard = null;
+
+        // Inicialización
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                loadUserData();
+            } else {
+                currentUser = null;
+                showAuth();
+            }
+        });
+
+        // AUTH FUNCTIONS
+        function showAuth() {
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('app-screen').classList.add('hidden');
+        }
+
+        function showApp() {
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+            document.getElementById('current-username').textContent = userData.username || currentUser.email;
+            renderBadges();
+            updateStats();
+            renderStations();
+            subscribeToLeaderboard();
+        }
+
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            const usernameGroup = document.getElementById('username-group');
+            
+            if (isLoginMode) {
+                document.getElementById('auth-title').textContent = '🏋️ Iniciar Sesión';
+                document.getElementById('auth-submit').textContent = 'Iniciar Sesión';
+                document.getElementById('toggle-text').innerHTML = '¿No tienes cuenta? <a id="toggle-link">Regístrate aquí</a>';
+                usernameGroup.style.display = 'none';
+            } else {
+                document.getElementById('auth-title').textContent = '🏋️ Crear Cuenta';
+                document.getElementById('auth-submit').textContent = 'Registrarse';
+                document.getElementById('toggle-text').innerHTML = '¿Ya tienes cuenta? <a id="toggle-link">Inicia sesión aquí</a>';
+                usernameGroup.style.display = 'block';
+            }
+            document.getElementById('toggle-link').addEventListener('click', toggleAuthMode);
+            document.getElementById('auth-message').innerHTML = '';
+        }
+
+        async function handleAuth(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value.trim();
+            const submitBtn = document.getElementById('auth-submit');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Procesando...';
+
+            try {
+                if (isLoginMode) {
+                    await auth.signInWithEmailAndPassword(email, password);
+                } else {
+                    if (!username) {
+                        throw new Error('Por favor, ingresa un nombre de usuario');
+                    }
+                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                    await db.collection('users').doc(userCredential.user.uid).set({
+                        username: username,
+                        email: email,
+                        completedStations: [],
+                        totalPoints: 0,
+                        badges: [],
+                        fastestTime: null,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    showAuthMessage('¡Cuenta creada exitosamente!', 'success');
+                }
+            } catch (error) {
+                let errorMessage = 'Ha ocurrido un error';
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = 'Este correo ya está registrado';
+                } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    errorMessage = 'Correo o contraseña incorrectos';
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                showAuthMessage(errorMessage, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = isLoginMode ? 'Iniciar Sesión' : 'Registrarse';
+            }
+        }
+
+        function showAuthMessage(message, type) {
+            const messageDiv = document.getElementById('auth-message');
+            messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
+            messageDiv.textContent = message;
+        }
+
+        async function logout() {
+            if (confirm('¿Seguro que quieres cerrar sesión?')) {
+                if (unsubscribeLeaderboard) {
+                    unsubscribeLeaderboard();
+                }
+                await auth.signOut();
+            }
+        }
+
+        // USER DATA FUNCTIONS
+        async function loadUserData() {
+            try {
+                const doc = await db.collection('users').doc(currentUser.uid).get();
+                if (doc.exists) {
+                    userData = doc.data();
+                    showApp();
+                } else {
+                    showAuth();
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                showAuthMessage('Error al cargar datos', 'error');
+            }
+        }
+
+        async function saveUserData() {
+            try {
+                await db.collection('users').doc(currentUser.uid).update({
+                    completedStations: userData.completedStations,
+                    totalPoints: userData.totalPoints,
+                    badges: userData.badges,
+                    fastestTime: userData.fastestTime,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (error) {
+                console.error('Error saving user data:', error);
+                alert('Error al guardar los datos. Por favor, intenta de nuevo.');
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('completed-count').textContent = userData.completedStations.length;
+            document.getElementById('total-points').textContent = userData.totalPoints;
+            document.getElementById('progress-percent').textContent = 
+                Math.round((userData.completedStations.length / 21) * 100) + '%';
+        }
+
+        // BADGES FUNCTIONS
+        function renderBadges() {
+            const grid = document.getElementById('badges-grid');
+            grid.innerHTML = '';
+
+            badges.forEach(badge => {
+                const div = document.createElement('div');
+                div.className = 'badge';
+                
+                let isUnlocked = false;
+                if (badge.requirement === 'speed') {
+                    isUnlocked = userData.fastestTime && userData.fastestTime < 60;
+                } else {
+                    isUnlocked = userData.completedStations.length >= badge.requirement;
+                }
+
+                if (isUnlocked) {
+                    div.classList.add('unlocked');
+                } else {
+                    div.classList.add('locked');
+                }
+
+                div.innerHTML = `
+                    <span class="badge-icon">${badge.icon}</span>
+                    <span class="badge-name">${badge.name}</span>
+                `;
+                div.title = badge.description;
+                
+                grid.appendChild(div);
+            });
+        }
+
+        function checkAndUnlockBadges(stationsCompleted, completionTime) {
+            let newBadges = [];
+
+            badges.forEach(badge => {
+                if (!userData.badges.includes(badge.id)) {
+                    let shouldUnlock = false;
+
+                    if (badge.requirement === 'speed' && completionTime < 60) {
+                        shouldUnlock = true;
+                        if (!userData.fastestTime || completionTime < userData.fastestTime) {
+                            userData.fastestTime = completionTime;
+                        }
+                    } else if (typeof badge.requirement === 'number' && stationsCompleted >= badge.requirement) {
+                        shouldUnlock = true;
+                    }
+
+                    if (shouldUnlock) {
+                        userData.badges.push(badge.id);
+                        newBadges.push(badge);
+                    }
+                }
+            });
+
+            if (newBadges.length > 0) {
+                newBadges.forEach((badge, index) => {
+                    setTimeout(() => showBadgeNotification(badge), index * 2000);
+                });
+            }
+        }
+
+        function showBadgeNotification(badge) {
+            const notification = document.getElementById('badge-notification');
+            document.getElementById('notification-icon').textContent = badge.icon;
+            document.getElementById('notification-title').textContent = `¡Logro Desbloqueado: ${badge.name}!`;
+            document.getElementById('notification-description').textContent = badge.description;
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // STATIONS FUNCTIONS
+        function renderStations() {
+            const grid = document.getElementById('stations-grid');
+            grid.innerHTML = '';
+
+            exercises.forEach((exercise, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'station-btn';
+                
+                const isCompleted = userData.completedStations.includes(index);
+                const isUnlocked = index === 0 || userData.completedStations.includes(index - 1);
+                const isCurrent = index === userData.completedStations.length;
+
+                if (isCompleted) {
+                    btn.classList.add('completed');
+                    btn.innerHTML = `
+                        <span class="checkmark">✓</span>
+                        <span class="station-number">Estación ${index + 1}</span>
+                        <span class="station-name">${exercise}</span>
+                    `;
+                } else if (!isUnlocked) {
+                    btn.classList.add('locked');
+                    btn.innerHTML = `
+                        <span class="station-number">🔒</span>
+                        <span class="station-name">Estación ${index + 1}</span>
+                    `;
+                    btn.disabled = true;
+                } else {
+                    if (isCurrent) btn.classList.add('current');
+                    btn.innerHTML = `
+                        <span class="station-number">Estación ${index + 1}</span>
+                        <span class="station-name">${exercise}</span>
+                    `;
+                }
+
+                if (!btn.disabled) {
+                    btn.onclick = () => openStation(index);
+                }
+
+                grid.appendChild(btn);
+            });
+        }
+
+        function openStation(index) {
+            currentStationIndex = index;
+            
+            document.getElementById('modal-title').textContent = 
+                `Estación ${index + 1}: ${exercises[index]}`;
+            document.getElementById('exercise-description').textContent = 
+                `Completa el circuito de ${exercises[index]} según las indicaciones del vídeo. Tienes 3 minutos para completarlo.`;
+            
+            const modal = document.getElementById('station-modal');
+            modal.classList.add('active');
+
+            resetTimer();
+
+            const completeBtn = document.getElementById('complete-btn');
+            if (userData.completedStations.includes(index)) {
+                completeBtn.textContent = '✓ Ya completada';
+                completeBtn.disabled = true;
+            } else {
+                completeBtn.textContent = '✓ Marcar como completada';
+                completeBtn.disabled = false;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('station-modal').classList.remove('active');
+            stopTimer();
+        }
+
+        // TIMER FUNCTIONS
+        function startTimer() {
+            if (timerInterval) return;
+            
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+                
+                if (timeRemaining <= 0) {
+                    stopTimer();
+                    alert('⏰ ¡Tiempo agotado! Puedes reiniciar el cronómetro o intentarlo de nuevo.');
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function resetTimer() {
+            stopTimer();
+            timeRemaining = TIME_LIMIT;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            const timerEl = document.getElementById('timer');
+            timerEl.textContent = display;
+            
+            timerEl.classList.remove('warning', 'danger');
+            if (timeRemaining <= 30) {
+                timerEl.classList.add('danger');
+            } else if (timeRemaining <= 60) {
+                timerEl.classList.add('warning');
+            }
+        }
+
+        async function completeStation() {
+            if (userData.completedStations.includes(currentStationIndex)) {
+                return;
+            }
+
+            const timeSpent = TIME_LIMIT - timeRemaining;
+            
+            userData.completedStations.push(currentStationIndex);
+            userData.totalPoints += 100;
+            
+            if (timeSpent < 60) {
+                userData.totalPoints += 50;
+            } else if (timeSpent < 120) {
+                userData.totalPoints += 25;
+            }
+            
+            checkAndUnlockBadges(userData.completedStations.length, timeSpent);
+            await saveUserData();
+            updateStats();
+            renderStations();
+            renderBadges();
+            
+            closeModal();
+            
+            if (userData.completedStations.length === 21) {
+                setTimeout(() => {
+                    alert(`🎉 ¡Felicidades ${userData.username}! Has completado las 21 estaciones. Puntuación final: ${userData.totalPoints} puntos`);
+                }, 300);
+            }
+        }
+
+        // LEADERBOARD FUNCTIONS
+    function subscribeToLeaderboard() {
+    unsubscribeLeaderboard = db.collection('users')
+        .orderBy('totalPoints', 'desc')
+        .limit(10)
+        .onSnapshot(snapshot => {
+            const leaderboardList = document.getElementById('leaderboard-list');
+            leaderboardList.innerHTML = '';
+
+            if (snapshot.empty) {
+                leaderboardList.innerHTML = '<p style="text-align: center; color: #999;">Aún no hay clasificaciones. ¡Sé el primero!</p>';
+                return;
+            }
+
+            snapshot.docs.forEach((doc, idx) => {
+                const player = doc.data();
+                const item = document.createElement('div');
+                item.className = 'leaderboard-item';
+                
+                let rankClass = '';
+                if (idx === 0) rankClass = 'gold';
+                else if (idx === 1) rankClass = 'silver';
+                else if (idx === 2) rankClass = 'bronze';
+
+                const isCurrentUser = doc.id === (currentUser && currentUser.uid);
+                if (isCurrentUser) {
+                    item.style.background = 'linear-gradient(135deg, #667eea20 0%, #764ba220 100%)';
+                    item.style.border = '2px solid #667eea';
+                }
+
+                const completedCount = Array.isArray(player.completedStations) ? player.completedStations.length : 0;
+                const displayName = player.username || player.email || 'Usuario';
+
+                item.innerHTML = `
+                    <span class="rank ${rankClass}">${idx + 1}</span>
+                    <span class="player-name">${displayName} ${isCurrentUser ? '(Tú)' : ''}</span>
+                    <span class="player-score">${player.totalPoints || 0} pts (${completedCount}/21)</span>
+                `;
+                
+                leaderboardList.appendChild(item);
+            });
+        }, error => {
+            console.error('Error loading leaderboard:', error);
+        });
+}
+
+
+        // EVENT LISTENERS
+        document.getElementById('auth-form').addEventListener('submit', handleAuth);
+        document.getElementById('toggle-link').addEventListener('click', toggleAuthMode);
+        document.getElementById('station-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'station-modal') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
